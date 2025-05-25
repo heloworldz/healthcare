@@ -17,20 +17,23 @@ def is_crisis(text: str) -> bool:
 
 def query_openai(user_input: str) -> str:
     messages = [
-        {"role": "system", "content": "You are a compassionate mental health assistant."},
+        {"role": "system", "content": "You are a compassionate and empathetic mental health assistant."},
         {"role": "user", "content": user_input}
     ]
-    response = openai.ChatCompletion.create(
-        model="gpt-3.5-turbo",
-        messages=messages,
-        max_tokens=150,
-        temperature=0.7,
-        top_p=0.9,
-        n=1,
-        stop=None,
-    )
-    return response.choices[0].message.content.strip()
-
+    try:
+        response = openai.ChatCompletion.create(
+            model="gpt-3.5-turbo",  # or "gpt-4" if you have access
+            messages=messages,
+            max_tokens=150,
+            temperature=0.7,
+            top_p=0.9,
+            n=1,
+            stop=None,
+        )
+        return response.choices[0].message["content"].strip()
+    except Exception as e:
+        return f"⚠️ An error occurred while contacting OpenAI: {str(e)}"
+        
 # Streamlit UI setup
 st.set_page_config(page_title="🧠 AI Mental Health Chatbot", layout="centered")
 st.title("🧠 AI Mental Health Chatbot")
