@@ -1,13 +1,12 @@
 import streamlit as st
-import requests
 import re
 from textblob import TextBlob
+import openai
 
-HF_TOKEN = st.secrets["HF_TOKEN"]
-HEADERS = {"Authorization": f"Bearer {HF_TOKEN}"}  # <---- Add this line
+# Get OpenAI API key from Streamlit secrets or environment variable
+openai.api_key = st.secrets["OPENAI_API_KEY"]  # Make sure you set this in Streamlit secrets
 
-MODEL_API_URL = "https://api-inference.huggingface.co/models/gpt2"
-
+# Crisis keywords regex
 CRISIS_PATTERN = re.compile(
     r"\b(kill\s+myself|suicid(?:e|al)|end\s+my\s+life|don't\s+want\s+to\s+live|"
     r"take\s+my\s+own\s+life|hurt\s+myself|die)\b", re.I
@@ -16,22 +15,23 @@ CRISIS_PATTERN = re.compile(
 def is_crisis(text: str) -> bool:
     return bool(CRISIS_PATTERN.search(text))
 
-def query_model(user_input: str) -> str:
-    prompt = f"User: {user_input}\nTherapist:"
-    payload = {
-        "inputs": prompt,
-        "parameters": {
-            "max_new_tokens": 150,
-            "temperature": 0.6,
-            "top_p": 0.9,
-            "stop": ["User:", "\n"]
-        }
-    }
-    response = requests.post(MODEL_API_URL, headers=HEADERS, json=payload, timeout=30)
-    response.raise_for_status()
-    result = response.json()
-    return result[0]["generated_text"].split("Therapist:")[-1].strip()
+def query_openai(user_input: str) -> str:
+    messages = [
+        {"role": "system", "content": "You are a compassionate mental health assistant."},
+        {"role": "user", "content": user_input}
+    ]
+    response = openai.ChatCompletion.create(
+        model="gpt-3.5-turbo",
+        messages=messages,
+        max_tokens=150,
+        temperature=0.7,
+        top_p=0.9,
+        n=1,
+        stop=None,
+    )
+    return response.choices[0].message.content.strip()
 
+# Streamlit UI setup
 st.set_page_config(page_title="🧠 AI Mental Health Chatbot", layout="centered")
 st.title("🧠 AI Mental Health Chatbot")
 st.caption("Free, empathetic mental health support (not a replacement for professional help)")
@@ -58,7 +58,7 @@ if user_message:
 
     with st.spinner("Thinking..."):
         try:
-            response = query_model(user_message)
+            response = query_openai(user_message)
             st.markdown("### 🤖 AI Response")
             st.write(response)
         except Exception as e:
