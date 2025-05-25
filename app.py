@@ -2,10 +2,11 @@ import streamlit as st
 import requests
 import re
 from textblob import TextBlob
+
 HF_TOKEN = st.secrets["HF_TOKEN"]
+HEADERS = {"Authorization": f"Bearer {HF_TOKEN}"}  # <---- Add this line
 
 MODEL_API_URL = "https://api-inference.huggingface.co/models/emozilla/mental-health-ai"
-HEADERS = {}
 
 CRISIS_PATTERN = re.compile(
     r"\b(kill\s+myself|suicid(?:e|al)|end\s+my\s+life|don't\s+want\s+to\s+live|"
