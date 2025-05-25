@@ -2,6 +2,7 @@ import streamlit as st
 import requests
 import re
 from textblob import TextBlob
+HF_TOKEN = st.secrets["HF_TOKEN"]
 
 MODEL_API_URL = "https://api-inference.huggingface.co/models/emozilla/mental-health-ai"
 HEADERS = {}
